@@ -38,8 +38,7 @@ func init() {
 }
 
 func main() {
-	// excecute_request("java", "sampleProject")
-	excecute_request("java", "sampleProject")
+	excecute_request("rb", "firstrubyProject")
 }
 
 func excecute_request(extension string, projectName string) {
@@ -48,6 +47,14 @@ func excecute_request(extension string, projectName string) {
 		switch extension {
 		case "java":
 			buildAndExecuteJava(filePath, projPath)
+		case "py":
+			buildAndExecutePython(filePath, projPath)
+		case "rb":
+			buildAndExecuteRuby(filePath, projPath)
+
+		case "c":
+			buildAndExecuteC(filePath, projPath)
+
 		}
 	}
 }
@@ -58,7 +65,7 @@ func samplePrograms(extension string) string {
 		return `#include <stdio.h>
 int main()
 {
-	printf("Hello World!\n");
+	printf("Hello World! by Pradeek\n");
 	return 0;
 }`
 	case "java":
@@ -217,6 +224,47 @@ func buildAndExecuteJava(filePath string, projectPath string) {
 	out := exec.Command("java", "-classpath", buildExecuteString, "Main")
 	// out.Path = "java"
 	output, err := out.CombinedOutput()
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	fmt.Println(string(output))
+}
+
+func buildAndExecutePython(filePath string, projectPath string) {
+	cmd := exec.Command("python", filePath)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	err := cmd.Run()
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
+func buildAndExecuteRuby(filePath string, projectPath string) {
+	cmd := exec.Command("ruby", filePath)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	err := cmd.Run()
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
+func buildAndExecuteC(filePath string, projectPath string) {
+	binPath := fmt.Sprintf("%s/bin", projectPath)
+	cmd := exec.Command("gcc", filePath, "-o", binPath+"/main")
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	err := cmd.Run()
+	if err != nil {
+		log.Fatal(err)
+	}
+	buildExecuteString := fmt.Sprintf("%s/bin", projectPath)
+
+	out := exec.Command(buildExecuteString + "/main")
+	// out.Path = "java"
+	output, err := out.Output()
 	if err != nil {
 		log.Println(err)
 		return
