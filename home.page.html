@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+    <h1>Small Online Compiler</h1>
+    <form action="/" method="post">
+        <select name="select_lang">
+            <option value="java">Java</option>
+            <option value="py">Python</option>
+            <option value="rb">Ruby</option>
+            <option value="c">C</option>
+        </select>
+        <p>
+            <textarea name="textarea_ide" id="" style="height: 536px; width: 1045px; resize: none;"></textarea>
+        </p>
+        <button type="submit">run</button>
+        <p>
+            <label for="">Result:</label>
+            {{if .Result}}
+        <h3>{{.Result}}</h3>
+        {{end}}
+        </p>
+    </form>
+</body>
+
+</html>

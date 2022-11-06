@@ -1,7 +1,14 @@
 package main
 
-import "experimental/executor"
+import (
+	"log"
+	"net/http"
+)
 
 func main() {
-	executor.ExecuteRequest("c", "FirstCProgram")
+	log.Println("Server running on port 8080")
+	err := http.ListenAndServe(":8080", Routes())
+	if err != nil {
+		log.Fatal(err)
+	}
 }

@@ -1,6 +1,7 @@
 package executor
 
 import (
+	"bytes"
 	"fmt"
 	"io"
 	"log"
@@ -37,59 +38,29 @@ func init() {
 	languagesBinConfig["go"] = true
 }
 
-func ExecuteRequest(extension string, projectName string) {
-	fileCreated, filePath, projPath := checkAndCreateFile(extension, projectName)
+func ExecuteRequest(extension string, projectName string, code string) string {
+	var result string = ""
+	fileCreated, filePath, projPath := checkAndCreateFile(extension, projectName, code)
 	if fileCreated {
 		switch extension {
 		case "java":
-			buildAndExecuteJava(filePath, projPath)
+			result = buildAndExecuteJava(filePath, projPath)
 		case "py":
-			buildAndExecutePython(filePath, projPath)
+			result = buildAndExecutePython(filePath, projPath)
 		case "rb":
-			buildAndExecuteRuby(filePath, projPath)
+			result = buildAndExecuteRuby(filePath, projPath)
 
 		case "c":
-			buildAndExecuteC(filePath, projPath)
+			result = buildAndExecuteC(filePath, projPath)
 
 		}
 	}
+	return result
 }
 
-func samplePrograms(extension string) string {
-	switch extension {
-	case "c":
-		return `#include <stdio.h>
-int main()
-{
-	printf("Hello World! by Pradeek\n");
-	return 0;
-}`
-	case "java":
-		return `public class Main {
-	public static void main(String[] args) {
-		System.out.println("Hello World!");
-	}
-}`
-	case "py":
-		return `print("Hello World!")`
-	case "rb":
-		return `print("Hello World!")`
-	case "go":
-		return `package main
-
-import "fmt"
-
-func main() {
-	fmt.Println("Hello World!")
-}
-`
-	}
-	return ""
-}
-
-func checkAndCreateFile(extension string, projectName string) (fileCreated bool, filaPath string, projPath string) {
+func checkAndCreateFile(extension string, projectName string, code string) (fileCreated bool, filaPath string, projPath string) {
 	srcPath, defaultFileName, projPath := checkAndCreateDir(extension, projectName)
-	sampleProgram := samplePrograms(extension)
+	// sampleProgram := samplePrograms(extension)
 	filePath := fmt.Sprintf("%s/%s.%s", srcPath, defaultFileName, extension)
 	f, err := os.OpenFile(filePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
@@ -97,7 +68,7 @@ func checkAndCreateFile(extension string, projectName string) (fileCreated bool,
 	}
 
 	defer f.Close()
-	io.WriteString(f, sampleProgram)
+	io.WriteString(f, code)
 
 	return true, filePath, projPath
 }
@@ -206,64 +177,68 @@ func projectConfigurationDetails(extension string, projectName string) projectDe
 	return projectDetails{}
 }
 
-func buildAndExecuteJava(filePath string, projectPath string) {
+func buildAndExecuteJava(filePath string, projectPath string) string {
 	binPath := fmt.Sprintf("%s/bin", projectPath)
 	cmd := exec.Command("javac", "-d", binPath, filePath)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
+	var errb bytes.Buffer
+	cmd.Stderr = &errb
 	err := cmd.Run()
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
+		return string(errb.String())
 	}
 	buildExecuteString := fmt.Sprintf("%s/bin", projectPath)
 
 	out := exec.Command("java", "-classpath", buildExecuteString, "Main")
-	// out.Path = "java"
 	output, err := out.CombinedOutput()
 	if err != nil {
 		log.Println(err)
-		return
 	}
-	fmt.Println(string(output))
+	return string(output)
 }
 
-func buildAndExecutePython(filePath string, projectPath string) {
+func buildAndExecutePython(filePath string, projectPath string) string {
 	cmd := exec.Command("python", filePath)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
+	var stdout, stderr bytes.Buffer
+	cmd.Stderr = &stderr
+	cmd.Stdout = &stdout
 	err := cmd.Run()
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
+		return string(stderr.String())
 	}
+	return string(stdout.String())
 }
 
-func buildAndExecuteRuby(filePath string, projectPath string) {
+func buildAndExecuteRuby(filePath string, projectPath string) string {
 	cmd := exec.Command("ruby", filePath)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
+	var stdout, stderr bytes.Buffer
+	cmd.Stderr = &stderr
+	cmd.Stdout = &stdout
 	err := cmd.Run()
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
+		return string(stderr.String())
 	}
+	return string(stdout.String())
 }
 
-func buildAndExecuteC(filePath string, projectPath string) {
+func buildAndExecuteC(filePath string, projectPath string) string {
 	binPath := fmt.Sprintf("%s/bin", projectPath)
 	cmd := exec.Command("gcc", filePath, "-o", binPath+"/main")
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
+	var stderr bytes.Buffer
+	cmd.Stderr = &stderr
 	err := cmd.Run()
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
+		return string(stderr.String())
 	}
 	buildExecuteString := fmt.Sprintf("%s/bin", projectPath)
 
 	out := exec.Command(buildExecuteString + "/main")
-	// out.Path = "java"
 	output, err := out.Output()
 	if err != nil {
 		log.Println(err)
-		return
 	}
-	fmt.Println(string(output))
+	return string(output)
 }
